@@ -1,0 +1,173 @@
+:root {
+	--title_height: 25px;
+	--ni_bg:rgba(150,200,200,0.5);
+	--info_width:200px;
+}
+BODY {
+	padding-left:8px !important;
+	padding-right: 8px !important;
+	--bottom-div-height:20px;
+	--top_height: 8vh;
+	
+}
+
+.header_TR, .header_TR TD {
+	font-weight: bold;
+	border-bottom: 1px solid black;
+	color: #fff;
+	background-color: #35a;
+}
+
+FORM {
+	margin:0;
+}
+.note_tool {
+	width:calc(100% - var(--info_width));
+	border:2px solid black;
+	border-radius:5px;
+}
+.note_input , .note_output {
+	flex: 1 0 calc( ( (100% / 2) - 4px ));
+}
+
+.body_row , .title_row {
+	display:flex;
+}
+.body_row {
+	width:100%;
+	position:relative;
+}
+.speed_add {
+	position:absolute;
+	right:calc( ( (100% / 2) - 4px ));
+	background-color:#ccc;
+	width:120px;
+	font-size:8px;
+}
+.speed_add BUTTON {
+	display:inline-block;
+	font-size:9px;
+}
+
+.ar_hp {
+	width:35px;
+	font-size:9px;
+}
+
+.title_row {
+	width:100%;
+	padding-bottom:5px;
+}
+
+.ni_TABLE {
+	width:100%;
+}
+.note_infos , .general_info
+{
+	background-color:lightgrey;
+	border:2px solid darkgrey;
+}
+
+.note_infos {
+
+	
+	font-size:14px;
+	position:fixed;
+	width:var(--info_width);
+	right:0;
+	top:var(--top_height);
+	height:calc( 100% - var(--top_height)  - var(--bottom-div-height) - 20px );
+	--base_size:14px;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	padding-bottom:45px;
+	display: flex;
+    flex-direction: column;
+}
+.general_info {
+	font-size:20px;
+	z-index:1000;
+	position:fixed;
+	top:0;
+	left:50%;
+	height:30px;
+	width:50%;
+	display:flex;
+}
+.gi_item {
+	flex: 1;
+}
+
+.ni_picked {
+	background-color:#fc9;
+}
+.note_input {
+	background:var(--ni_bg);
+	border-right:2px solid orange;
+}
+.note_input INPUT TEXTAREA {
+	background:var(--ni_bg);
+}
+
+.note_output {
+	overflow-x:scroll;
+	overflow-y:hidden;
+}
+.note_title  {
+	width:100%;
+	height:var(--title_height);
+	border-bottom:2px dotted black;
+}
+.note_text {
+	width:98%;	
+}
+.note_text[side=HTML]
+{
+	overflow:scroll;
+}
+
+
+.seq_break {
+	outline:2px solid orange;
+	background-color:orange;
+}
+
+.collided , .collided TR , collided TD , .gi_item[ntype="collisions"] {
+  background-color:yellow;
+  color:red;
+  outline:2px dotted red;
+  
+}
+
+.no_answer {
+	background-color:#ff7de6;	
+}
+.no_answers {
+	background-color:#ff7d36;	
+}
+
+.collide_item {
+	outline:2px dotted red;
+}
+.orphan_item {
+	outline:2px dotted purple;
+}
+
+
+.orphaned , .orphaned TR ,  .orphaned TD , .gi_item[ntype="orphans"] {
+	  background-color:yellow;
+	  color:purple;
+	  	outline:2px dotted purple;
+}
+
+.gi_item {
+	position:relative;
+}
+
+.gi_item::after {
+	content:attr(count);
+	position:absolute;
+	bottom:0;
+	right:0;
+}
+
