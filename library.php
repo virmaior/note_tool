@@ -1,7 +1,7 @@
 <?php
 namespace NoteToolBase;
 
-define('NOTES_VERSION','20240201');
+define('NOTES_VERSION','20240205');
 
 
 class note_base_page
@@ -91,7 +91,7 @@ class maker_page extends note_base_page
         
         function action_button(string $action)
         {
-            return sprintf('<button class="action_BUTTON context="%1$s" action="%2$s">%3$s</button>',static::context(),$action,ucfirst($action));
+            return sprintf('<button class="action_BUTTON" context="%1$s" action="%2$s">%3$s</button>',static::context(),$action,ucfirst($action));
         }
         
         function show()
