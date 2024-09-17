@@ -69,7 +69,7 @@ var nm_tool =
 				 	success		: 	function(data) {
 					$(window).off('beforeunload');
 					if (my_action == 'copy-note') {
-						 window.location.href = 'maker/maker.php?note_id='  + $('<div>' + data + '</div>').find('.note_tool').attr('note_id'); 
+						 window.location.href = 'maker.php?note_id='  + $('<div>' + data + '</div>').find('.note_tool').attr('note_id'); 
 					}
 				}
 		});
