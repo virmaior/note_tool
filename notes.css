@@ -277,7 +277,42 @@ H2 {
 
 
 
+.example_BOX {
+	border:2px dotted black;
+	background-color:#eef;
+	padding:10px;
+	position:relative;
+	border-radius:3px;
+	margin-left:10%;
+	width:80%;
+}
+.example_BOX::before {
+	position:absolute;
+	content:"Examples";
+	top:0;
+	left:0;
+	margin-top:-15px;
+	background-color:#eef;
+	border-radius:3px 3px 0px 0px;
+	border:2px dotted black;
+}
 
-
-
+.example_BOX .example {
+	padding-left:20px;
+  	position:relative;
+}
+.example_BOX .example::before {
+	position:absolute;
+	margin-left:-20px;
+}
+.example_BOX .example[etype=correct]::before
+{
+	color:green;
+	content:'\2713';
+}
+.example_BOX .example[etype=wrong]::before
+{
+	color:red;
+	content:'\2718';
+}
 
