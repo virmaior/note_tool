@@ -1,7 +1,7 @@
 <?php
 namespace NoteToolBase;
 
-define('NOTES_VERSION','20240917');
+define('NOTES_VERSION','20240926');
 
 
 class note_base_page
@@ -105,8 +105,8 @@ class maker_page extends note_base_page
     <div class="gi_item" ntype="collisions" count="0">Collisions</div>
     <div class="gi_item" ntype="orphans" count="0">Orphans</div>
     <div class="gi_item" ntype="min_id" count="0">Min</div>
-    <div class="gi_item" ntype="max_id" count="0">Max</div>%1$s %2$s %3$s
-    </div>',static::action_button('enable'),static::action_button('copy'),static::action_button('submit'));
+    <div class="gi_item" ntype="max_id" count="0">Max</div><div class="gi_LINK"><a href="/notes/notes.php?note_id=%1$u" target="_%1$u">View</a></div>%2$s %3$s %4$s
+    </div>', $this->note->note_id, static::action_button('enable'),static::action_button('copy'),static::action_button('submit'));
             echo '<div class="note_infos"  >
         <div class="note_info" part_id="0">&nbsp;</div></div>';
         }

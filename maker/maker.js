@@ -1,3 +1,14 @@
+function isValidHTML(html) {
+  const parser = new DOMParser();
+  html = '<div>' +  html.replaceAll('& ','&amp;').trim() + '</div>';
+  if (html === '<div></div>') { return true; }
+  const doc = parser.parseFromString(html.toLowerCase(), 'text/xml');
+  if (doc.documentElement.querySelector('parsererror')) {
+	var error_message = doc.documentElement.querySelector('parsererror').innerText.replace('This page contains the following errors:','');
+    return error_message.substring(0,error_message.indexOf("Below")).replace('Found errors:','');
+  } 
+      return true;
+}
 
 
 var nm_tool = 
@@ -54,7 +65,19 @@ var nm_tool =
 		var note_id = $('.note_AREA').attr('note_id');
 		var note_title = $('.note_title[side=text]').val();
 		var message_text =  ' Note #' + note_id + note_title;
-		var full_text = nm_tool.make_full_text();
+		var full = nm_tool.make_full_text();
+		$('.body_row , .action_BUTTON').removeClass('HTML_error')
+		$('.error_message').remove();
+		if (full.errors.length > 0) {
+			full.errors.forEach((value, index) =>	{
+					console.log(index + ' as ' + value);
+					 $('.body_row[part_id=' + index + ']').addClass('HTML_error').append('<div class="error_message">' + value + '</div>') 
+			 } 
+			);
+			$('.action_BUTTON[action=submit]').addClass('HTML_error');
+			return false;
+		}
+		
 		$.ajax({
 			  type: "POST",
    			   		url			:	nm_tool.url,
@@ -63,7 +86,7 @@ var nm_tool =
 			    	"data"		:	{
 						'action': my_action,
 						'note_title' : note_title,
-						'note': full_text,
+						'note': full.text,
 						'note_id':note_id
 					},
 				 	success		: 	function(data) {
@@ -182,18 +205,28 @@ var nm_tool =
 	},
 	make_full_text()
 	{
-		var f_text = '';
-		$('.note_text[side=text]').each(function(){  f_text = f_text + '' +  $(this).val(); });
-		return f_text;
+		var f_text = [];
+		var errors = [];
+		$('.note_text[side=text]').each(function(){  
+			var html_state = isValidHTML($(this).val());
+			if (html_state !== true) { 
+					if ( typeof html_state !== "undefined" ) {
+					errors[$(this).attr('part_id')] =  html_state;
+					}
+			} 
+			f_text[$(this).attr('part_id')] =  $(this).val(); 
+		});
+
+		return  { text : f_text.join(''),
+				  errors : errors }
 	},
 	split_areas()
 	{
+		console.log('called split areas');
+
 		var na = $('.note_AREA');
-		var full_text = nm_tool.make_full_text();
-		$('.note_text[side=text]').remove();
+		var full_text = nm_tool.make_full_text().text;
 		var parts = full_text.split('<h');
-		
-		
 		$('.note_text').remove();
 
 		parts.forEach(function(item,index ){

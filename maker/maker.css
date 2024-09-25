@@ -124,6 +124,7 @@ FORM {
 .note_text[side=HTML]
 {
 	overflow:scroll;
+	order:100;
 }
 
 
@@ -171,3 +172,16 @@ FORM {
 	right:0;
 }
 
+.spoiler {
+	background-color:rgba(120,120,120,0.5);
+}
+.HTML_error {
+	background-color:rgba(250,200,200,0.7);
+}
+.error_message {
+	font-family:Courier, Monospace;
+	order:2;
+	background-color:red;
+	color:white;
+	font-size:12px;
+}

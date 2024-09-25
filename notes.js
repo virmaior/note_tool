@@ -63,6 +63,11 @@ var note_tool =
 		{
 			var fixed_answer = answer;
 			if ($(this).attr('force') == 'singular') {  fixed_answer = fixed_answer.slice(0,-1); }
+			if ($(this).attr('force') == 'plural') {  
+				if (fixed_answer.slice(0,-1) != 's') { fixed_answer += 's';}
+				
+			}
+
 			var multiply = note_tool.tag_adjust($(this));
 
 			var ts = note_tool.tw(fixed_answer, 'IM Fell Double Pica 24px')  * multiply;
