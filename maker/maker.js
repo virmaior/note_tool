@@ -1,6 +1,6 @@
 function isValidHTML(html) {
   const parser = new DOMParser();
-  html = '<div>' +  html.replaceAll('& ','&amp;').trim() + '</div>';
+  html = '<div>' +  html.replaceAll('&nbsp;', ' ').replaceAll('& ','&amp;').trim() + '</div>';
   if (html === '<div></div>') { return true; }
   const doc = parser.parseFromString(html.toLowerCase(), 'text/xml');
   if (doc.documentElement.querySelector('parsererror')) {
@@ -14,6 +14,7 @@ function isValidHTML(html) {
 var nm_tool = 
 {
 	orphans: [],
+	line_finder : /line\s(\d+)/,
 	collisions: 0,
 	max_id: 0,
 	min_id: 0,
@@ -23,6 +24,20 @@ var nm_tool =
 	iids : [],
 	url: '/notes/maker/helper.php',
 	context: '[context=nm]',
+	new_lines:function(part_id) {
+		var me = $('.note_text[part_id=' + part_id + '][side=text]');
+		var x = $(me).find('TEXTAREA');
+		var lines = x.val().split("\n");	
+		var line_width = 30; //assume we get at most thirty characters a line
+		out = [];
+		var y = 0;
+		for (let i = 0; i < lines.length; i++) {
+			out.push( '<div class="row" style="--y:' + y +  '" line="' + i +  '" >' + i.toString().padStart(3,'0') +  '</div>');
+			y = y + (Math.ceil(lines[i].length / line_width));
+		}		
+		$(me).find('.row_nums').html(out.join(''));
+			
+	},
 	leave_test:function()
 	{
 		if (nm_tool.changed) {
@@ -36,10 +51,12 @@ var nm_tool =
 	},	
  	refresh_by_id :function(part_id)
 	 {
-		$('.note_text[part_id=' + part_id + '][side=HTML]').html($('.note_text[part_id=' +  part_id + '][side=text]').val());
-		$('.note_text[part_id=' + part_id + '][side=text]').attr('id','ntt_' + part_id);
+		$('.note_text[part_id=' + part_id + '][side=HTML]').html($('.note_text[part_id=' +  part_id + '][side=text] TEXTAREA').val());
+		$('.note_text[part_id=' + part_id + '][side=text] TEXTAREA').attr('id','ntt_' + part_id);
 	//	$(this).on('change', nm_tool.refresh);		
 		nm_tool.show_info(part_id);
+		nm_tool.new_lines(part_id);
+
 	},
 	 edited: function( )
 	 {
@@ -63,21 +80,28 @@ var nm_tool =
 	submit(my_action)
 	{
 		var note_id = $('.note_AREA').attr('note_id');
-		var note_title = $('.note_title[side=text]').val();
+		var note_title = $('.note_title[side=text] TEXTAREA').val();
 		var message_text =  ' Note #' + note_id + note_title;
 		var full = nm_tool.make_full_text();
-		$('.body_row , .action_BUTTON').removeClass('HTML_error')
+		$('.body_row , .action_BUTTON , .row').removeClass('HTML_error');
 		$('.error_message').remove();
-		if (full.errors.length > 0) {
-			full.errors.forEach((value, index) =>	{
-					console.log(index + ' as ' + value);
-					 $('.body_row[part_id=' + index + ']').addClass('HTML_error').append('<div class="error_message">' + value + '</div>') 
-			 } 
-			);
-			$('.action_BUTTON[action=submit]').addClass('HTML_error');
-			return false;
+		if (my_action != 'copy-note') {		//allow copy of invalid HTML.
+			if (full.errors.length > 0) {
+				full.errors.forEach((value, index) =>	{
+						console.log(index + ' as ' + value);
+						 $('.body_row[part_id=' + index + ']').addClass('HTML_error');
+						 
+						 
+						 var line = nm_tool.line_finder.exec(value)[1];
+						 var ln_row = $('.note_text[part_id=' + index + '][side=text] .row_nums .row[line=' + line  + ']');
+						 ln_row.addClass('HTML_error').append('<div class="error_message">' + value + '</div>')
+				 } 
+				);
+				$('.action_BUTTON[action=submit]').addClass('HTML_error');
+				return false;
+			}
 		}
-		
+
 		$.ajax({
 			  type: "POST",
    			   		url			:	nm_tool.url,
@@ -207,16 +231,17 @@ var nm_tool =
 	{
 		var f_text = [];
 		var errors = [];
-		$('.note_text[side=text]').each(function(){  
+		$('.note_text[side=text] TEXTAREA').each(function(){  
+			var part_id = $(this).parent().attr('part_id');
 			var html_state = isValidHTML($(this).val());
 			if (html_state !== true) { 
 					if ( typeof html_state !== "undefined" ) {
-					errors[$(this).attr('part_id')] =  html_state;
+					errors[part_id] =  html_state;
 					}
 			} 
-			f_text[$(this).attr('part_id')] =  $(this).val(); 
+			f_text[part_id] =  $(this).val(); 
 		});
-
+		console.log(errors);
 		return  { text : f_text.join(''),
 				  errors : errors }
 	},
@@ -228,17 +253,19 @@ var nm_tool =
 		var full_text = nm_tool.make_full_text().text;
 		var parts = full_text.split('<h');
 		$('.note_text').remove();
-
+		
 		parts.forEach(function(item,index ){
 			if (item.length == 0) { return false; }
 			
 			na.append('<div class="body_row" part_id="' + index + '">' + 
-						'<textarea class="note_text" side="text" part_id="' + index + '" id="ntt_' + index + '">&lt;h' + item +  '</textarea>' +
+						'<div class="note_text" side="text" part_id="' + index + '" id="ntt_' + index + '"><div class="row_nums">&nbsp;</div>' +
 						'<div class="speed_add"><button onclick="nm_tool.add_fillin(this);">Fillin</button>'  +
-						'<button onclick="nm_tool.add_refer(this);">Refer</button><input type="number" class="ar_hp" value="" />' + 
+						'<button onclick="nm_tool.add_refer(this);">Refer</button><input type="number" class="ar_hp" value="" /></div>' + 
+						'<textarea>&lt;h' + item +  '</textarea>' + 
 						'</div>' +
 					   	'<div class="note_text" side="HTML" part_id="' + index + '" id="nth_' + index + '"> [loading]</div>' +
 					   '<div>');
+			nm_tool.new_lines(index);
 		});
 	},
 	bind()
@@ -277,7 +304,7 @@ var nm_tool =
 		var hp_id = parseInt(p.attr('max') *1 ) + 1;
 		console.log('P:' + part_id + ' hp ' + hp_id);
 		var text  = '<span class="fillin" hp_id="' + hp_id + '"></span>';
-		nm_tool.add_text(p.find('.note_text[side=text]'),text);
+		nm_tool.add_text(p.find('.note_text[side=text] TEXTAREA'),text);
 		nm_tool.shift_hp_ids(part_id,hp_id);
 		nm_tool.refresh_by_id(part_id);
 	},
@@ -291,7 +318,7 @@ var nm_tool =
 		if (hp_id == 0) { console.log('no hp id'); return false; }
 		if ($('*[hp_id=' + hp_id + ']').length == 0) { console.log('that hp_id is not used!'); return false; }		
 		var text  = '<span class="refer" hp_id="' + hp_id + '">&nbsp;</span>';
-		nm_tool.add_text(p.find('.note_text[side=text]'),text);
+		nm_tool.add_text(p.find('.note_text[side=text] TEXTAREA'),text);
 		nm_tool.refresh_by_id(part_id);
 	}
 }

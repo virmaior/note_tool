@@ -1,7 +1,7 @@
 <?php
 namespace NoteToolBase;
 
-define('NOTES_VERSION','20240926');
+define('NOTES_VERSION','20240930Z');
 
 
 class note_base_page
@@ -98,7 +98,7 @@ class maker_page extends note_base_page
         {
             echo sprintf('<div class="note_tool note_AREA" note_id="%5$u">
                     <div class="title_row"><input class="note_title" side="text" value="%1$s"><div class="note_title" side="HTML">%2$s</div></div>
-                    <div class="body_row"><textarea class="note_text" side="text" part_id="0">%3$s</textarea><div class="note_text" side="HTML" part_id="0">%4$s</div></div>
+                    <div class="body_row"><div class="note_text" side="text" part_id="0"><textarea>%3$s</textarea><div class="note_text" side="HTML" part_id="0">%4$s</div></div>
                     </div>',
                 htmlentities($this->note->note_title),$this->note->note_title,  htmlentities($this->note->note_body),$this->note->note_body,$this->note->note_id);
             echo sprintf('<div class="general_info">
