@@ -1,7 +1,7 @@
 <?php
 namespace NoteToolBase;
 
-define('NOTES_VERSION','20241001G');
+define('NOTES_VERSION','202410D1');
 
 
 class note_base_page

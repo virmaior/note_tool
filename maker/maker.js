@@ -89,7 +89,7 @@ var nm_tool =
 	submit(my_action)
 	{
 		var note_id = $('.note_AREA').attr('note_id');
-		var note_title = $('.note_title[side=text] TEXTAREA').val();
+		var note_title = $('.note_title[side=text]').val();
 		var message_text =  ' Note #' + note_id + note_title;
 		var full = nm_tool.make_full_text();
 		$('.body_row , .action_BUTTON , .row').removeClass('HTML_error');
@@ -267,15 +267,20 @@ var nm_tool =
 			if (item.length == 0) { return false; }
 			
 			na.append('<div class="body_row" part_id="' + index + '">' + 
-						'<div class="note_text" side="text" part_id="' + index + '" id="ntt_' + index + '"><div class="row_nums">&nbsp;</div>' +
+						'<div class="note_text" side="text" part_id="' + index + '" ><div class="row_nums">&nbsp;</div>' +
 						'<div class="speed_add"><button onclick="nm_tool.add_fillin(this);">Fillin</button>'  +
 						'<button onclick="nm_tool.add_refer(this);">Refer</button><input type="number" class="ar_hp" value="" /></div>' + 
-						'<textarea>&lt;h' + item +  '</textarea>' + 
+						'<textarea id="ntt_' + index + '">&lt;h' + item +  '</textarea>' + 
 						'</div>' +
 					   	'<div class="note_text" side="HTML" part_id="' + index + '" id="nth_' + index + '"> [loading]</div>' +
 					   '<div>');
 			nm_tool.new_lines(index);
 		});
+		$('.note_text TEXTAREA').on('scroll',function(e){
+			$(this).parent().css('--yoffset',$(this).scrollTop() + 'px');
+
+		});
+
 	},
 	bind()
 	{
