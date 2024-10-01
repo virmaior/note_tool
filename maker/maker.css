@@ -195,26 +195,32 @@ FORM {
 	width: 30px;
     background-color: #999;
     /* flex: 1; */
-    font-family: courier, monospace;
-    font-size: 15px;
     text-align: right;
     position:relative;
-    
 }
 
 .row_nums .row {
 	position:absolute;
 	width:100%;
 	text-align:right;
-	top:calc(var(--y) * 15px);
+	top:calc(var(--y) * var(--yheight));
 	color:green;
 }
 
-.note_text[side=text] {
+
+.note_text[side=text] , .note_test {
 	display:flex;
+	font-size:13px;
+    font-family: courier, monospace;
+ 	--yheight: 15px;   
+	
+}
+.note_text[side=text] {
 	width:100%;
 }
 .note_text[side=text] TEXTAREA {
 	width:100%;
 	height:100%;
+	font-size:13px;
+	line-height:var(--yheight);
 } 

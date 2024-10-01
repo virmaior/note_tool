@@ -24,16 +24,25 @@ var nm_tool =
 	iids : [],
 	url: '/notes/maker/helper.php',
 	context: '[context=nm]',
+	ta_width:function()
+	{
+		var fakeEl = $('<span class="note_test">ABCDE12345</span>').hide().appendTo(document.body);
+		var width =  fakeEl.width();
+		fakeEl.remove();
+		//	console.log('10 characters = ' + width);
+		return width;
+	},
 	new_lines:function(part_id) {
 		var me = $('.note_text[part_id=' + part_id + '][side=text]');
 		var x = $(me).find('TEXTAREA');
 		var lines = x.val().split("\n");	
-		var line_width = 30; //assume we get at most thirty characters a line
+		var line_width = Math.floor( ( x.width() / nm_tool.ta_width() ) * 10 ); 
+		//console.log('calculated as ' + line_width);
 		out = [];
 		var y = 0;
 		for (let i = 0; i < lines.length; i++) {
-			out.push( '<div class="row" style="--y:' + y +  '" line="' + i +  '" >' + i.toString().padStart(3,'0') +  '</div>');
-			y = y + (Math.ceil(lines[i].length / line_width));
+			out.push( '<div class="row" style="--y:' + y +  '" line="' + (i + 1) +  '" >' + (i + 1).toString().padStart(3,'0') +  '</div>');
+			y = y + (Math.ceil((lines[i].length + 1) / line_width));
 		}		
 		$(me).find('.row_nums').html(out.join(''));
 			
