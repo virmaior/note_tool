@@ -2,12 +2,13 @@ var note_tool =
 {
 	note_id : false,
 	hp_ids : [],
+	la: [],
 	load:function()
 	{
 		let params = new URL(window.location.href).searchParams;
 		if (params.get("note_id") !== "null")  { this.note_id = parseInt(params.get("note_id"));  }		
 		this.hp_ids = [];
-		var hp_id_string  = localStorage.getItem('hp_id');
+		var hp_id_string  = localStorage.getItem('note_' + this.note_id);
 		if (hp_id_string !== null) {	
 			this.hp_ids = JSON.parse(hp_id_string); 
 	
@@ -15,7 +16,7 @@ var note_tool =
 	},
 	log:function(x)
 	{
-		console.log('nt - ' + x);	
+		note_tool.la.push(x);
 	},
 	tw:function(text, fontProp)
 	{
@@ -45,7 +46,7 @@ var note_tool =
 	},
 	save:function()
 	{
-			localStorage.setItem('hp_id',JSON.stringify(note_tool.hp_ids));	
+		localStorage.setItem('note_' + this.note_id,JSON.stringify(note_tool.hp_ids));	
 	},
 	tag_adjust(me)
 	{
@@ -101,14 +102,22 @@ var note_tool =
 			} 
 		}	
 	},
+	has:function(hp_id)
+	{
+		var test_item = note_tool.hp_ids[hp_id];
+		if (test_item === undefined) { return false; }
+		if (test_item == null) { return false; }
+		return true;
+	},
 	handle_refer:function(me,hp_id)
 	{
-			if (note_tool.hp_ids[hp_id] !== undefined) { 
+			if (note_tool.has(hp_id)) { 
 				note_tool.log('refer seen as true for ' + hp_id + ' setting correct" ');			
 				note_tool.set_correct($(me),hp_id,note_tool.hp_ids[hp_id]);  
 				return true;
 			}
-			$('.refer[hp_id='  + hp_id +  ']').html('&nbsp;')
+			$('.refer[hp_id='  + hp_id +  ']').html('&nbsp;');
+			return false;
 	},
 	make_fillin:function(me)
 	{
@@ -116,11 +125,10 @@ var note_tool =
 			$(me).attr('answer', $(me).html().trim());
 			var multiply = note_tool.tag_adjust($(me));
 			if ($(me).attr('answerlength') === undefined) {  
-					$(me).css('width',((parseInt($(me).width()) * multiply) + 5 ) +  "px");
-
+				$(me).css('width',((parseInt($(me).width()) * multiply) + 5 ) +  "px");
 			} else {
 				multiply = $(me).attr('answerlength');
-					$(me).css('width',((10 * multiply) + 5 ) +  "px");
+				$(me).css('width',((10 * multiply) + 5 ) +  "px");
 
 			}
 			
@@ -136,7 +144,6 @@ var note_tool =
 		$(me).attr('content', $(me).html().trim());
 		$(me).html('&nbsp;');
 		$(me).addClass('spoiler_hide');
-
 		$(me).on('click',
 		function(e){ 
 			e.preventDefault(); 
@@ -165,6 +172,17 @@ var note_tool =
 	},
 	init:function()
 	{
+		try {
+			$(".note_BAR BUTTON").off('click').on('click',function()
+			{
+				var action = $(this).attr('action');
+				if (action == "reset") {  
+					note_tool.empty(); 
+					note_tool.reload();
+				}
+			});
+			
+			
 		if (localStorage) {
 			if (localStorage.getItem('state') == 'test') {
 				this.hide();
@@ -180,14 +198,10 @@ var note_tool =
 		note_tool.hook();
 		
 		$(".note_AREA").attr('status','ready');
-		$(".note_BAR BUTTON").off('click').on('click',function()
-		{
-			var action = $(this).attr('action');
-			if (action == "reset") {  
-				note_tool.empty(); 
-				note_tool.reload();
-			}
-		})
+
+	  } catch(e) {
+		
+	  }
 	},
 	test_coded_answer(me) {
 				var coded_answer = $(me).parent().attr('codedanswer');

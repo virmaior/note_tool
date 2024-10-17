@@ -10,21 +10,41 @@ BODY{
 	--color5: #7cc;
 	--color6: #cac;
 }
-.note_AREA[status="loading"]::before {
-	content:"Loading";
-	position:absolute;
-	height:100%;
-	width:100%;
-	padding-left:30%;
-	padding-right:30%;
-	background-color:lightblue;
-	z-index:50;
-}
+
 
 .note_AREA[status="loading"] 
 {
 	color:white;
+	background-color:lightblue;
+	width:98vw;
+	height:98vh;
+	margin-left:-5%;
+	margin-right:-5%;
+	
 }
+
+.note_AREA[status="loading"] *
+{
+	visibility:hidden;
+}
+
+.note_AREA[status="loading"]::before {
+	content:"Loading";
+	position:absolute;
+	padding-top:40vh;
+	padding-bottom:40vh;
+	width:100%;
+	font-size:20vh;
+	padding-left:30vw;
+	padding-right:30vw;
+	z-index:50;
+	display:block;
+	visibility:visible;
+}
+
+
+
+
 .note_AREA[status="hidden"] 
 {
 	color:black;
