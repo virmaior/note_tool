@@ -24,19 +24,24 @@ var nm_tool =
 	iids : [],
 	url: '/notes/maker/helper.php',
 	context: '[context=nm]',
+	mdiv: false,
+	message(x)
+	{
+		this.mdiv.innerHTML = x;
+	},
 	ta_width:function()
 	{
-		var fakeEl = $('<span class="note_test">ABCDE12345</span>').hide().appendTo(document.body);
-		var width =  fakeEl.width();
+		const fakeEl = $('<span class="note_test">ABCDE12345</span>').hide().appendTo(document.body);
+		const width =  fakeEl.width();
 		fakeEl.remove();
 		//	console.log('10 characters = ' + width);
 		return width;
 	},
 	new_lines:function(part_id) {
-		var me = $('.note_text[part_id=' + part_id + '][side=text]');
-		var x = $(me).find('TEXTAREA');
-		var lines = x.val().split("\n");	
-		var line_width = Math.floor( ( x.width() / nm_tool.ta_width() ) * 10 ); 
+		const $me = $('.note_text[part_id=' + part_id + '][side=text]');
+		const $x = $me.find('TEXTAREA');
+		var lines = $x.val().split("\n");	
+		var line_width = Math.floor( ( $x.width() / nm_tool.ta_width() ) * 10 ); 
 		//console.log('calculated as ' + line_width);
 		out = [];
 		var y = 0;
@@ -44,7 +49,7 @@ var nm_tool =
 			out.push( '<div class="row" style="--y:' + y +  '" line="' + (i + 1) +  '" >' + (i + 1).toString().padStart(3,'0') +  '</div>');
 			y = y + (Math.ceil((lines[i].length + 1) / line_width));
 		}		
-		$(me).find('.row_nums').html(out.join(''));
+		$me.find('.row_nums').html(out.join(''));
 			
 	},
 	leave_test:function()
@@ -56,7 +61,7 @@ var nm_tool =
 	},
 	refresh_all()
 	{
-		$('.note_text[side=HTML]').each(function(){ nm_tool.refresh_by_id($(this).attr('part_id')); })
+		$('.note_text[side=HTML]').each((i,noteHTML) => { nm_tool.refresh_by_id($(noteHTML).attr('part_id')); })
 	},	
  	refresh_by_id :function(part_id)
 	 {
@@ -70,39 +75,42 @@ var nm_tool =
 	 edited: function( )
 	 {
 		$(window).off('beforeunload').on('beforeunload',nm_tool.leave_test);	//add hook to show page change
-		var part_id = $(this).attr('part_id');
+		const part_id = $(this).attr('part_id');
 		nm_tool.refresh_by_id(part_id);
 	},
 	enable()
 	{
-		$('.note_text[side=HTML]').find('.fillin , .select').each(function(){
-			if ($(this).hasClass('fillin')) 
+		$('.note_text[side=HTML]').find('.fillin , .select').each((i,inp) => {
+			const $inp = inp;
+			if ($inp.hasClass('fillin')) 
 			{
-				note_tool.make_fillin($(this));
-			} else if ($(this).hasClass('select')) 
+				note_tool.make_fillin($inp);
+			} else if ($inp.hasClass('select')) 
 			{
-				note_tool.make_select($(this));
+				note_tool.make_select($inp);
 			}
 			});
 			note_tool.hook();
 	},
 	submit(my_action)
 	{
-		var note_id = $('.note_AREA').attr('note_id');
-		var note_title = $('.note_title[side=text]').val();
-		var message_text =  ' Note #' + note_id + note_title;
-		var full = nm_tool.make_full_text();
+		const note_id = $('.note_AREA').attr('note_id');
+		const note_title = $('.note_title[side=text]').val();
+		const message_text =  ' Note #' + note_id + note_title;		
+		const full = nm_tool.make_full_text();
+		nm_tool.message('Starting update on ' + message_text);
+
 		$('.body_row , .action_BUTTON , .row').removeClass('HTML_error');
 		$('.error_message').remove();
 		if (my_action != 'copy-note') {		//allow copy of invalid HTML.
+			nm_tool.message('Updated failed on ' + message_text + 'due to error');
+
 			if (full.errors.length > 0) {
 				full.errors.forEach((value, index) =>	{
 						console.log(index + ' as ' + value);
 						 $('.body_row[part_id=' + index + ']').addClass('HTML_error');
-						 
-						 
-						 var line = nm_tool.line_finder.exec(value)[1];
-						 var ln_row = $('.note_text[part_id=' + index + '][side=text] .row_nums .row[line=' + line  + ']');
+						 const line = nm_tool.line_finder.exec(value)[1];
+						 const ln_row = $('.note_text[part_id=' + index + '][side=text] .row_nums .row[line=' + line  + ']');
 						 ln_row.addClass('HTML_error').append('<div class="error_message">' + value + '</div>')
 				 } 
 				);
@@ -123,42 +131,43 @@ var nm_tool =
 						'note_id':note_id
 					},
 				 	success		: 	function(data) {
-					$(window).off('beforeunload');
-					if (my_action == 'copy-note') {
-						 window.location.href = 'maker.php?note_id='  + $('<div>' + data + '</div>').find('.note_tool').attr('note_id'); 
-					}
+						nm_tool.message("Successfully updated " + message_text) ;
+						$(window).off('beforeunload');
+						if (my_action == 'copy-note') {
+							 window.location.href = 'maker.php?note_id='  + $('<div>' + data + '</div>').find('.note_tool').attr('note_id'); 
+						}
 				}
 		});
 			
 	},
 	row_info(part_id,me)
 	{
-				var hp_id = $(me).attr('hp_id');
-				if (hp_id < nm_tool.prev_id) {
-					$(nm_tool.prev_item).addClass('seq_break');
-				}
-				nm_tool.prev_id = hp_id;
-				nm_tool.prev_item = $(me);
-	
-				if ($(me).hasClass('select')) {
-					var answers = $(me).attr('answers');
+		const $me=  $(me);
+		var hp_id = $me.attr('hp_id');
+		if (hp_id < nm_tool.prev_id) {
+			$(nm_tool.prev_item).addClass('seq_break');
+		}
+		nm_tool.prev_id = hp_id;
+		nm_tool.prev_item = $me;
+
+				if ($me.hasClass('select')) {
+					var answers = $me.attr('answers');
 					if (answers) {
-						if (answers.indexOf($(me).html()) === -1) {
-							$(me).addClass('no_answer');
+						if (answers.indexOf($me.html()) === -1) {
+							$me.addClass('no_answer');
 						}
-					} else  { $(me).addClass('no_answers');  }
+					} else  { $me.addClass('no_answers');  }
 				}
-	
-				var row = '<td class="hp_TD" hp_id="' + hp_id + '">'  + hp_id + '</td><td>' + $(me).attr('class') + '</td><td>' + $(me).html() + '</td></tr>';
-				if (nm_tool.find_hp_id(hp_id)) {
-					nm_tool.collisions = nm_tool.collisions + 1;
-					$(me).addClass('collide_item');
-					nm_tool.nis[part_id].push('<tr class="collided">' +  row);
-				} else {
-					nm_tool.nis[part_id].push( '<tr>' + row );
-				}
-				nm_tool.iids[part_id].push(hp_id);
-		
+
+			var row = '<td class="hp_TD" hp_id="' + hp_id + '">'  + hp_id + '</td><td>' + $me.attr('class') + '</td><td>' + $me.html() + '</td></tr>';
+			if (nm_tool.find_hp_id(hp_id)) {
+				nm_tool.collisions = nm_tool.collisions + 1;
+				$(me).addClass('collide_item');
+				nm_tool.nis[part_id].push('<tr class="collided">' +  row);
+			} else {
+				nm_tool.nis[part_id].push( '<tr>' + row );
+			}
+			nm_tool.iids[part_id].push(hp_id);
 	},
 	getMax:function(a){
 		return Math.max(...a.flat());
@@ -169,10 +178,11 @@ var nm_tool =
 	find_hp_id(hp_id){
 		return nm_tool.iids.flat().includes(hp_id);
 	},
-	highlight_html(){
-		var part_id = $(this).attr('part_id');
+	highlight_html(e){
+		const $t = $(e.currentTarget);
+		const part_id = $t.attr('part_id');
 		$('.note_text[part_id=' + part_id +  ']').addClass('ni_picked');
-		$(this).on('mouseout',function(){ $('.note_text[part_id=' + part_id +  ']').removeClass('ni_picked'); });
+		$t.on('mouseout',function(){ $('.note_text[part_id=' + part_id +  ']').removeClass('ni_picked'); });
 	},
 	show_info(xpart_id)
 	{
@@ -181,21 +191,22 @@ var nm_tool =
 		nm_tool.orphans[xpart_id] = 0;
 		nm_tool.collisions =0;
 
-		$('.note_text[side=HTML][part_id=' + xpart_id + ']').each(function(){
-			var part_id = $(this).attr('part_id');
-			$(this).find('.fillin , .select').removeClass('collide_item').each(function () {nm_tool.row_info(part_id,$(this)); }
-			);
+		$('.note_text[side=HTML][part_id=' + xpart_id + ']').each((i,noteText) => {
+			const $t = $(noteText);
+			const part_id = $t.attr('part_id');
+			$t.find('.fillin , .select').removeClass('collide_item').each((i,collideItem) => {nm_tool.row_info(part_id,$(collideItem)); });
 			
 			
-			$(this).find('.refer').removeClass('orphan_item').each(function(){
-				var hp_id = $(this).attr('hp_id');
+			$t.find('.refer').removeClass('orphan_item').each((i,orphanItem) => {
+				const $t = $(orphanItem);
+				const hp_id = $t.attr('hp_id');
 				if (!nm_tool.find_hp_id(hp_id)) {
 					nm_tool.orphans[xpart_id] = nm_tool.orphans[xpart_id] + 1;
-					nm_tool.nis[xpart_id].push('<tr class="orphaned"><td>' + hp_id + '</td><td>' + $(this).attr('class') + '</td><td>' + this.outerHTML + '</td></tr>'	);
-					$(this).addClass('orphan_item');
+					nm_tool.nis[xpart_id].push('<tr class="orphaned"><td>' + hp_id + '</td><td>' + $t.attr('class') + '</td><td>' + orphanItem.outerHTML + '</td></tr>'	);
+					$t.addClass('orphan_item');
 					$('.note_text[side=text][part_id=' + xpart_id +']').addClass('orphan_item');
 				}
-	
+
 			});
 			$('.note_info[part_id=' + part_id + ']' ).remove();
 			if (nm_tool.nis[xpart_id].length === 0)  { nm_tool.nis[xpart_id].push('<tr class="empty_info"><td colspan=3>No Items</td></tr>'); }
@@ -208,18 +219,15 @@ var nm_tool =
 		$('.body_row[part_id=' + xpart_id + ']').attr('min',pmin).attr('max',pmax);
 		
 		
-		$('.hp_TD').off('click').on('click',function(){
-			var hp_id = $(this).attr('hp_id');
-		    $([document.documentElement, document.body]).animate({
-        scrollTop: $('span[hp_id=' + hp_id + ']').offset().top - 100
-    		}, 500);
+		$('.hp_TD').off('click').on('click', (e) => 
+		{	
+			const hp_id = $(e.currentTarget).attr('hp_id');
+		    $([document.documentElement, document.body]).animate({scrollTop: $('span[hp_id=' + hp_id + ']').offset().top - 100}, 500);
 		});
-	
-
 
 		$('.gi_item[ntype=orphans]').attr('count', nm_tool.orphans.reduce(
 			function getSum(total, num) {
-  					return total + (num * 1)
+					return total + (num * 1)
 			}		
 		));
 		nm_tool.max_id = nm_tool.getMax(nm_tool.iids);
@@ -232,23 +240,25 @@ var nm_tool =
 		$('.note_info[part_id=' + xpart_id + ']').off('mouseover').on('mouseover',nm_tool.highlight_html);
 		
 	},
+	
 	fix_title()
 	{
 		$('.note_title[side=HTML]').text($('.note_title[side=text]').val());	
 	},
 	make_full_text()
 	{
-		var f_text = [];
-		var errors = [];
-		$('.note_text[side=text] TEXTAREA').each(function(){  
-			var part_id = $(this).parent().attr('part_id');
-			var html_state = isValidHTML($(this).val());
+		const f_text = [];
+		const errors = [];
+		$('.note_text[side=text] TEXTAREA').each((i,ta) => {  
+			const $ta= $(ta);
+			const part_id = $ta.parent().attr('part_id');
+			const html_state = isValidHTML($ta.val());
 			if (html_state !== true) { 
 					if ( typeof html_state !== "undefined" ) {
 					errors[part_id] =  html_state;
 					}
 			} 
-			f_text[part_id] =  $(this).val(); 
+			f_text[part_id] =  $ta.val(); 
 		});
 		console.log(errors);
 		return  { text : f_text.join(''),
@@ -258,26 +268,29 @@ var nm_tool =
 	{
 		console.log('called split areas');
 
-		var na = $('.note_AREA');
+		const $na = $('.note_AREA');
 		var full_text = nm_tool.make_full_text().text;
 		var parts = full_text.split('<h');
 		$('.note_text').remove();
 		
-		parts.forEach(function(item,index ){
+		parts.forEach((item,index) => {
 			if (item.length == 0) { return false; }
-			
-			na.append('<div class="body_row" part_id="' + index + '">' + 
+			let start = '';
+			if (index > 0) { start = '&lt;h'; }
+
+			$na.append('<div class="body_row" part_id="' + index + '">' + 
 						'<div class="note_text" side="text" part_id="' + index + '" ><div class="row_nums">&nbsp;</div>' +
 						'<div class="speed_add"><button onclick="nm_tool.add_fillin(this);">Fillin</button>'  +
 						'<button onclick="nm_tool.add_refer(this);">Refer</button><input type="number" class="ar_hp" value="" /></div>' + 
-						'<textarea id="ntt_' + index + '">&lt;h' + item +  '</textarea>' + 
+						'<textarea id="ntt_' + index + '">' + start + item +  '</textarea>' + 
 						'</div>' +
 					   	'<div class="note_text" side="HTML" part_id="' + index + '" id="nth_' + index + '"> [loading]</div>' +
 					   '<div>');
 			nm_tool.new_lines(index);
 		});
-		$('.note_text TEXTAREA').on('scroll',function(e){
-			$(this).parent().css('--yoffset',$(this).scrollTop() + 'px');
+		$('.note_text TEXTAREA').on('scroll',(e) => {
+			const $t = (e.currentTarget);
+			$t.parent().css('--yoffset',$t.scrollTop() + 'px');
 
 		});
 
@@ -286,9 +299,10 @@ var nm_tool =
 	{
 		$('.note_text[side=text]').off('change , keyup').on('change keyup',nm_tool.edited);
 		$('.note_title[side=text]').off('change , keyup').on('change keyup',nm_tool.fix_title);
-		$('.action_BUTTON' + nm_tool.context).off('click').on('click',function(e){
+		
+		$('.action_BUTTON' + nm_tool.context).off('click').on('click',(e) => {
 			e.preventDefault();
-			var action = $(this).attr('action');
+			const action = $(e.currentTarget).attr('action');
 			if (action == 'enable' ) { nm_tool.enable(); }
 			if (action == 'copy' ) { nm_tool.submit('copy-note'); }
 			if (action == 'submit' ) { nm_tool.submit('update-note'); }
@@ -299,6 +313,7 @@ var nm_tool =
 	{
 		nm_tool.split_areas();
 		nm_tool.refresh_all();
+		this.mdiv = 		document.querySelector('.gi_item[ntype=message]');
 		nm_tool.bind();
 	},
 	add_text(me,text)
@@ -313,9 +328,9 @@ var nm_tool =
 	},
 	add_fillin(me)
 	{
-		var p = $(me).closest('.body_row');
-		var part_id = p.attr('part_id');
-		var hp_id = parseInt(p.attr('max') *1 ) + 1;
+		const $p = $(me).closest('.body_row');
+		const part_id = $p.attr('part_id');
+		const hp_id = parseInt($p.attr('max') *1 ) + 1;
 		console.log('P:' + part_id + ' hp ' + hp_id);
 		var text  = '<span class="fillin" hp_id="' + hp_id + '"></span>';
 		nm_tool.add_text(p.find('.note_text[side=text] TEXTAREA'),text);
@@ -325,10 +340,10 @@ var nm_tool =
 	add_refer(me)
 	{
 
-		var p = $(me).closest('.body_row');
-		var part_id = p.attr('part_id');
+		const $p = $(me).closest('.body_row');
+		const part_id = $p.attr('part_id');
 
-		var hp_id = p.find('.ar_hp').val();
+		const hp_id = $p.find('.ar_hp').val();
 		if (hp_id == 0) { console.log('no hp id'); return false; }
 		if ($('*[hp_id=' + hp_id + ']').length == 0) { console.log('that hp_id is not used!'); return false; }		
 		var text  = '<span class="refer" hp_id="' + hp_id + '">&nbsp;</span>';
@@ -337,6 +352,6 @@ var nm_tool =
 	}
 }
 
-$(document).ready(function(){
+$(document).ready(() => {
 	nm_tool.first_init();
 });

@@ -1,18 +1,32 @@
 <?php
 namespace NoteToolBase;
 
-define('NOTES_VERSION','202410D1');
 
+define('NOTES_VERSION','2025C926');
+if (!defined('NOTES_PATH')) {
+    define('NOTES_PATH','/notes/');
+}
 
 class note_base_page
 {
+    protected $note;
     
-    function base_url()
+    
+    static function base_url():string
     {
-        return '/notes/';
+        return NOTES_PATH;
     }
     
-    function version_url(string $x)
+    function tail_DIV():string
+    {
+        $nd = new \DateTimeImmutable($this->note->date);
+        
+        return  sprintf('<div class="tail_DIV">Copyright ©2022-%1$s -  %2$s "%3$s" (%4$s)</div>',
+            date('Y'),
+            $this->note->author,$this->note->title,$nd->format('M d, Y'));
+    }
+    
+    function version_url(string $x):string
     {
         $fc = '?';
         $base = '';
@@ -22,19 +36,19 @@ class note_base_page
         return $base . $x . $fc . 'v=' . NOTES_VERSION;
     }
     
-    function load_js(string $filename, bool $debug = DEBUG_MODE)
+    function load_js(string $filename, bool $debug = DEBUG_MODE):void
     {
         
         echo sprintf('<script src="%1$s"></script>',self::version_url($filename));
     }
     
     
-    function load_css(string $filename)
+    function load_css(string $filename):void
     {
         echo sprintf('<link rel="stylesheet" type="text/css" href="%1$s" />',  self::version_url( $filename)) ;
     }
     
-    function head()
+    function head(): void
     {
         
     }
@@ -45,7 +59,7 @@ class maker_page extends note_base_page
         private $my_db;
         private $note_id;
         
-        function test_admin(object $x)
+        function test_admin(object $x): bool
         {
             return true;
         }
@@ -57,9 +71,9 @@ class maker_page extends note_base_page
             self::load_note();
         }
         
-        function head()
+        function head(): void
         {
-            echo sprintf('<html><head><title>%1$s</title>',$this->title);
+            echo sprintf('<html><head><title>%1$s</title>',$this->note->title);
             static::load_css(static::base_url() . 'notes.css');
             static::load_css(static::base_url() . 'maker/maker.css');
             
@@ -73,35 +87,36 @@ class maker_page extends note_base_page
             echo '</head>';
         }
         
-        function context()
+        static function context(): string
         {
             return 'nm';
         }
         
-        function load_note() {
+        function load_note(): void {
             if ($this->note_id == 0) {
                 $this->note = new \stdClass();
                 $this->note->note_id = 0;
-                $this->note->note_title = '';
-                $this->note->note_body = ' ... ';
-                return false;
+                $this->note->title = '';
+                $this->note->body = ' ... ';
+                return;
             }
-            $this->note = $this->my_db->query(sprintf('SELECT * FROM notes WHERE note_id = %1$u',$this->note_id))->fetch_object();
+            $this->note = $this->my_db->query(sprintf('SELECT note_title as `title`, note_body as `body`, note_id  FROM notes WHERE note_id = %1$u',$this->note_id))->fetch_object();
         }
         
-        function action_button(string $action)
+        function action_button(string $action): string
         {
             return sprintf('<button class="action_BUTTON" context="%1$s" action="%2$s">%3$s</button>',static::context(),$action,ucfirst($action));
         }
         
-        function show()
+        function show(): void
         {
             echo sprintf('<div class="note_tool note_AREA" note_id="%5$u">
                     <div class="title_row"><input class="note_title" side="text" value="%1$s"><div class="note_title" side="HTML">%2$s</div></div>
                     <div class="body_row"><div class="note_text" side="text" part_id="0"><textarea>%3$s</textarea><div class="note_text" side="HTML" part_id="0">%4$s</div></div>
                     </div>',
-                htmlentities($this->note->note_title),$this->note->note_title,  htmlentities($this->note->note_body),$this->note->note_body,$this->note->note_id);
+                htmlentities($this->note->title),$this->note->title,  htmlentities($this->note->body),$this->note->body,$this->note->note_id);
             echo sprintf('<div class="general_info">
+    <div class="gi_item" ntype="message">&nbsp;</div>
     <div class="gi_item" ntype="collisions" count="0">Collisions</div>
     <div class="gi_item" ntype="orphans" count="0">Orphans</div>
     <div class="gi_item" ntype="min_id" count="0">Min</div>
@@ -109,12 +124,13 @@ class maker_page extends note_base_page
     </div>', $this->note->note_id, static::action_button('enable'),static::action_button('copy'),static::action_button('submit'));
             echo '<div class="note_infos"  >
         <div class="note_info" part_id="0">&nbsp;</div></div>';
+            echo '</div>';
         }
 
 
-        function footer()
+        function footer():void 
         {
-            echo '</body></html>';
+            echo static::tail_DIV();   
         }
 }
     
@@ -122,15 +138,14 @@ class maker_page extends note_base_page
 
 class note_page extends note_base_page
 {
-    private $title,$body,$date, $my_db;
-    private $debug = false;
+    private $my_db, $debug = false;
     public $mode = 'encoded'; // the mode here determines whether or not the fillin and select will be encoded.
     
     
     
-    function head($student_id)
+    function head($student_id): void
     {
-        echo sprintf('<html><head><title>%1$s</title>',$this->title);
+        echo sprintf('<html><head><title>%1$s</title>',$this->note->title);
         static::load_css('notes.css');
         static::load_css('note-view.css');
         
@@ -162,13 +177,14 @@ class note_page extends note_base_page
     
     function __construct(string $title, string $body, string $date)
     {
-        $this->title = $title;
-        $this->body = $body;
-        $this->date = $date;
+        $this->note->title = $title;
+        $this->note->body = $body;
+        $this->note->date = $date;
+        $this->note->author = static::author();
     }
     
     
-    function author() {
+    function author(): string {
         return 'Anonymous';
     }
     
@@ -204,7 +220,7 @@ return true;
     }
     
     
-    function encode_answer(string $x)
+    function encode_answer(string $x): string
     {
         return md5(strtoupper($x));
     }
@@ -212,13 +228,13 @@ return true;
     function process_body()
     {
         $this->mode = 'open';
-        if ($this->mode == 'open') { return $this->body; }
+        if ($this->mode == 'open') { return $this->note->body; }
         
        $dom = new \DOMDocument('1.0','UTF-16');
-       $dom->loadHTML( '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $this->body);
+       $dom->loadHTML( '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $this->note->body);
        $spans = $dom->getElementsByTagName('span');
        
-       $body = $this->body;
+       $body = $this->note->body;
        $nodeListLength = $spans->length; // this value will also change
        $hp_ids = array();
        for ($i = 0; $i < $nodeListLength; $i ++)
@@ -257,19 +273,15 @@ return true;
        return $body;
     }
 
-    function body()
+    function body(): void
     {
         echo '<body>';
         echo '<div class="note_BAR"><button action="reset">Reset</button></div>';
-        echo sprintf('<div class="note_AREA" status="loading"><h1>%1$s</h1>%2$s</div>',$this->title,static::process_body());
+        echo sprintf('<div class="note_AREA" status="loading"><h1>%1$s</h1>%2$s</div>',$this->note->title,static::process_body());
     }
     
-    function tail() {
-        $nd = new \DateTimeImmutable($this->date);
-        
-        echo sprintf('<div class="tail_DIV">Copyright ©2022-%1$s -  %2$s "%3$s" (%4$s)</div>',
-            date('Y'),
-            static::author(),$this->title,$nd->format('M d, Y'));
+    function tail(): void {
+        echo static::tail_DIV();
         
      ?><script>
 	    if (localStorage) {
@@ -321,20 +333,22 @@ class note_helper_tool
             static::$note_table,intval($r['note_id']),static::$my_db->escape_string($r['note_title']),static::$my_db->escape_string($r['note'])));
     }
     
-    function copy_from_request(array $r)
+    function copy_from_request(array $r): int
     {
         static::query(sprintf('INSERT INTO `%1$s` ( note_id ,note_title, note_body) VALUES (%2$s , "%3$s" , "%4$s")',
             static::$note_table, 'NULL',static::$my_db->escape_string($r['note_title']),static::$my_db->escape_string($r['note'])));
         return static::$my_db->insert_id();
     }
     
-    function copy_from_id( int $note_id)
+    function copy_from_id( int $note_id): int
     {
         static::query(sprintf('INSERT INTO `%1$s` ( note_title, note_body)
                                 SELECT note_title, note_body FROM notes WHERE note_id = %2$u',  static::$note_table, $note_id));
+        return static::$my_db->insert_id();
+        
     }
     
-    function note_tool_div(int $note_id)
+    function note_tool_div(int $note_id): void
     {
         echo sprintf('<div class="note_tool" note_id="%1$u">New Note ID</div>',$note_id);
     }

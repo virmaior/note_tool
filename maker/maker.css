@@ -2,12 +2,14 @@
 	--title_height: 25px;
 	--ni_bg:rgba(150,200,200,0.5);
 	--info_width:200px;
+	--gi_height:30px;
 }
 BODY {
 	padding-left:8px !important;
 	padding-right: 8px !important;
 	--bottom-div-height:20px;
 	--top_height: 8vh;
+	margin-top:var(--gi_height);
 	
 }
 
@@ -89,12 +91,15 @@ FORM {
 	z-index:1000;
 	position:fixed;
 	top:0;
-	left:50%;
-	height:30px;
-	width:50%;
+	height:var(--gi_height);
+	width:100%;
+	right:0;
 	display:flex;
 }
-.gi_item {
+.general_info > .gi_item[ntype=message] {
+	flex: 0 0 30%;
+}
+.general_info > .gi_item {
 	flex: 1;
 }
 
@@ -226,3 +231,8 @@ FORM {
 	font-size:13px;
 	line-height:var(--yheight);
 } 
+
+
+.tail_DIV {
+	margin:0 !important;
+}
