@@ -11,6 +11,9 @@ BODY{
 	--color6: #cac;
 }
 
+.select_INPUT { 
+	font-size: var(--base_size);
+}
 
 .note_AREA[status="loading"] 
 {

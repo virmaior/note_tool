@@ -60,14 +60,14 @@ const note_tool =
 	},
 	set_correct:function(me,hp_id,answer)
 	{
-		const $me = $(me);
 		note_tool.log('marked correct on' + hp_id + ' with answer ' + answer);
-		$me.addClass('correct');
-		$('*[hp_id='  + hp_id +  ']').each((idx,hpi) =>
+		me.classList.add('correct');
+		
+
+		document.querySelectorAll(`*[hp_id="${hp_id}"]`).forEach(async (hpi) => 
 		{
-			const $t = $(hpi);
-			var fixed_answer = answer;
-			const force = $.attr('force');
+			let fixed_answer = answer;
+			const force = hpi.getAttribute('force');
 			if (force == 'singular') {  fixed_answer = fixed_answer.slice(0,-1); }
 			if (force == 'plural') {  
 				if (fixed_answer.slice(0,-1) != 's') { fixed_answer += 's';}	
@@ -75,15 +75,19 @@ const note_tool =
 
 			const multiply = note_tool.tag_adjust(hpi);
 
-			var ts = note_tool.tw(fixed_answer, 'IM Fell Double Pica 24px')  * multiply;
+			const ts = note_tool.tw(fixed_answer, 'IM Fell Double Pica 24px')  * multiply;
 			note_tool.log(hp_id + ' with ' + ts + ' from multiply ' + multiply );
-
-			if (ts > $t.innerWidth()) {
-				$t.css('width',ts  + 'px');
-    			note_tool.log('overflowing text detected "' + fixed_answer + '" is ' + ts + ' wide and element is ' + $t.innerWidth() + ' wide  for ' + $t.parent().html() );
-			}
 			
-			$t.html(fixed_answer);	
+			const computedStyle = getComputedStyle(hpi);
+			const width = parseFloat(computedStyle.width);
+			if (ts > width) {
+			      hpi.style.width = `${ts}px`;
+			      note_tool.log(`overflowing text detected "${fixed_answer}" is ${ts} wide and element is ${hpi.offsetWidth} wide for ${hpi.parentElement.innerHTML}`);
+			  }
+			  await new Promise(resolve => setTimeout(resolve, 0)); // Wait for DOM/event queue
+			  if (hpi.isConnected && document.contains(hpi)) {
+		         hpi.innerHTML = fixed_answer;
+		     } 
 		});
 		note_tool.hp_ids[hp_id] = answer;
 		note_tool.save();	
@@ -131,19 +135,22 @@ const note_tool =
 	{
 		const hp_id =  me.getAttribute('hp_id');
 		const h = me.innerHTML;
-		const $me = $(me);
 
 		me.setAttribute('answer', h.trim());
 		let multiply = note_tool.tag_adjust(me);
 		const answerLength = me.getAttribute('answerlength') ?? undefined;
+		const meWidth = parseFloat(getComputedStyle(me).width);
+
 		if (answerLength === undefined) {  
-			$me.css('width',((parseInt($me.width()) * multiply) + 5 ) +  "px");
+			me.style.width  = ((parseInt(meWidth) * multiply) + 5 ) +  "px";
 		} else {
 			multiply = answerLength;
-			$me.css('width',((10 * multiply) + 5 ) +  "px");
+			me.style.width  = ((10 * multiply) + 5 ) +  "px";
 		}
 		
-		$('*[hp_id='  + hp_id +  ']').css('width', $me.width());
+
+		document.querySelectorAll(`*[hp_id="${hp_id}"]`).forEach((hpi) =>  { hpi.style.width = meWidth; } );
+
 		if (!note_tool.handle_refer(me,hp_id)) {
 			me.innerHTML = '<input type="text" class="fillin_INPUT" hp_id="'  + hp_id + '" value="" />';
 		}
@@ -151,11 +158,12 @@ const note_tool =
 	},
 	make_spoiler:function(me)
 	{
-		me.style.width = getComputedStyle(me).width;
+		me.style.width = 'clamp(100px,'  +  getComputedStyle(me).width + ',100%)';
 		me.setAttribute('content', me.innerHTML.trim());
 		me.innerHTML = '&nbsp;';
 		me.classList.add('spoiler_hide');
 		me.addEventListener('click', (e) => {
+			const t = e.currentTarget;
 			e.preventDefault(); 
 			t.classList.remove('spoiler_hide'); 
 			t.innerHTML = t.getAttribute('content');
@@ -165,30 +173,31 @@ const note_tool =
 	{
 		me.setAttribute('answer', me.innerHTML.trim());
 		const hp_id =  me.getAttribute('hp_id');
-		const $me = $(me);
 		
 		if (!note_tool.handle_refer(me,hp_id)) 
 		{
 			const options = ['<option value="...">...</option>'];
-			const values = $me.attr('answers').split(',');
+			const values = me.getAttribute('answers').split(',');
 			values.forEach(item => {
 			        const trimmedItem = item.trim();
 			        options.push(`<option value="${trimmedItem}">${trimmedItem}</option>`);
 		    });
-			$me.html('<SELECT class="select_INPUT" hp_id="'  + hp_id + '" value="" >' + options.join('') + '</select>');
+			me.innerHTML= '<SELECT class="select_INPUT" hp_id="'  + hp_id + '" value="" >' + options.join('') + '</select>';
 		}
 	},
 	init:function()
 	{
 		try {
-			$(".note_BAR BUTTON").off('click').on('click',(e) =>
+			
+			document.querySelectorAll('.note_BAR BUTTON').forEach( nbb => {
+				nbb.addEventListener('click',(e) =>
 			{
-				const action = $(e.currentTarget).attr('action');
+				const action = e.currentTarget.getAttribute('action');
 				if (action == "reset") {  
 					note_tool.empty(); 
 					note_tool.reload();
 				}
-			});
+			});});
 			
 		if (localStorage) {
 			if (localStorage.getItem('state') == 'test') {
@@ -210,38 +219,40 @@ const note_tool =
 		alert("something went wrong loading this note. Please contact your instructor!");
 	  }
 	},
-	test_coded_answer($t,$tp) {
-		var coded_answer = $tp.attr('codedanswer');
-		const hp_id =  $tp.attr('hp_id');
-		var pretty_answer = $t.val().toUpperCase().trim();
-		console.log(pretty_answer + ' correct = ' + coded_answer +  ' ? given = ' + md5(pretty_answer)) ;
-		if (md5(pretty_answer) == coded_answer) {
-			note_tool.set_correct($tp,hp_id,$t.val())
-		} else { $t.removeClass('correct');  }		
+	test_coded_answer(t,tp,hp_id,codedAnswer) {
+		const pretty_answer = t.value.toUpperCase().trim();
+		console.log(pretty_answer + ' correct = ' + codedAnswer +  ' ? given = ' + md5(pretty_answer)) ;
+		if (md5(pretty_answer) == codedAnswer) {
+			note_tool.set_correct(tp,hp_id,t.value);
+		} else { t.classList.remove('correct');  }		
 	},
 	test_answer:function(e){
-		const $t = $(e.currentTarget);
-		const $tp = $t.parent();
-
-		var coded_answer = $tp.attr('codedanswer'); 
-		if (coded_answer !== undefined)
+		const t = e.currentTarget;
+		const tp =t.parentNode;
+		const hp_id =  tp.getAttribute('hp_id');
+		const codedAnswer = tp.getAttribute('codedanswer') ?? undefined;; 
+		
+		if (codedAnswer !== undefined)
 		{
 				console.log('uses coded answer test');
-				note_tool.test_coded_answer($t,$tp);
+				note_tool.test_coded_answer(t,tp,hp_id,codedAnswer);
 				return true;
 		}
-		const answer = $tp.attr('answer');
-		const hp_id =  $tp.attr('hp_id');
+		const answer = tp.getAttribute('answer');
 
-		if ($t.val().toUpperCase().trim() == answer.toUpperCase()) {
-			note_tool.set_correct($tp,hp_id,answer)
-		} else { $t.removeClass('correct');  }
+		if (t.value.toUpperCase().trim() == answer.toUpperCase()) {
+			note_tool.set_correct(tp,hp_id,answer)
+		} else { t.classList.remove('correct');  }
 				
 		},
 	hook:function()
 	{
-		$(".select_INPUT , .fillin_INPUT").off('change keyup').on('change keyup',note_tool.test_answer);
-	}
+		document.querySelectorAll('.select_INPUT, .fillin_INPUT').forEach(element => {
+		    ['change', 'keyup'].forEach(event => {
+		        element.removeEventListener(event, note_tool.test_answer);
+		        element.addEventListener(event, note_tool.test_answer);
+		    });
+		});	}
 	
 }
 

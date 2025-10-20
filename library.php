@@ -77,8 +77,8 @@ class maker_page extends note_base_page
             static::load_css(static::base_url() . 'notes.css');
             static::load_css(static::base_url() . 'maker/maker.css');
             
-            echo   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
+            echo   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica">';
+            echo  '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
             
             static::load_js(static::base_url() . 'notes.js?rand=' . rand(1,1024) . '&');
             static::load_js(static::base_url() . 'maker/maker.js');
@@ -147,8 +147,9 @@ class note_page extends note_base_page
         static::load_css('note-view.css');
         
         
-        echo   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
+        echo   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica">';
+        
+   // <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
         
         static::test($this->my_db,$student_id);
         static::load_js(static::base_url() . 'notes.js?rand=' . rand(1,1024) . '&');
