@@ -3,6 +3,7 @@ const note_tool =
 	note_id : false,
 	hp_ids : [],
 	la: [],
+	noteArea : false,
 	load:function()
 	{
 		let params = new URL(window.location.href).searchParams;
@@ -13,6 +14,7 @@ const note_tool =
 			this.hp_ids = JSON.parse(hp_id_string); 
 	
 		} 
+		this.noteArea = document.querySelector('.note_AREA');
 	},
 	log:function(x)
 	{
@@ -50,26 +52,28 @@ const note_tool =
 	},
 	tag_adjust(me)
 	{
-		var multiply = 1;
-		if ($(me).closest('h2').length > 0) {
-			multiply = 1.5;
-		}	
+		let multiply = 1;
+		if (me.closest('h2')) {
+		    multiply = 1.5;
+		}
 		return multiply;
 	},
-	set_correct:function($me,hp_id,answer)
+	set_correct:function(me,hp_id,answer)
 	{
+		const $me = $(me);
 		note_tool.log('marked correct on' + hp_id + ' with answer ' + answer);
 		$me.addClass('correct');
 		$('*[hp_id='  + hp_id +  ']').each((idx,hpi) =>
 		{
 			const $t = $(hpi);
 			var fixed_answer = answer;
-			if ($t.attr('force') == 'singular') {  fixed_answer = fixed_answer.slice(0,-1); }
-			if ($t.attr('force') == 'plural') {  
+			const force = $.attr('force');
+			if (force == 'singular') {  fixed_answer = fixed_answer.slice(0,-1); }
+			if (force == 'plural') {  
 				if (fixed_answer.slice(0,-1) != 's') { fixed_answer += 's';}	
 			}
 
-			const multiply = note_tool.tag_adjust($t);
+			const multiply = note_tool.tag_adjust(hpi);
 
 			var ts = note_tool.tw(fixed_answer, 'IM Fell Double Pica 24px')  * multiply;
 			note_tool.log(hp_id + ' with ' + ts + ' from multiply ' + multiply );
@@ -86,15 +90,14 @@ const note_tool =
 	},
 	hide:function()
 	{
-		const title = document.querySelector(".note_AREA h1").outerHTML;
+		const title = this.noteArea.querySelector("h1").outerHTML;
 		let content = title;
 		if (localStorage.getItem('state_text')) {
 			content += "<br />" + localStorage.getItem('state_text');
 		}
 		
-		const noteArea = document.querySelector(".note_AREA");
-		noteArea.setAttribute('status', 'hidden');
-		noteArea.innerHTML = content;
+		this.noteArea.setAttribute('status', 'hidden');
+		this.noteArea.innerHTML = content;
 	},
 	focus:function()
 	{
@@ -112,54 +115,59 @@ const note_tool =
 		if (test_item == null) { return false; }
 		return true;
 	},
-	handle_refer:function($me,hp_id)
+	handle_refer:function(me,hp_id)
 	{
 		if (note_tool.has(hp_id)) { 
 			note_tool.log('refer seen as true for ' + hp_id + ' setting correct" ');			
-			note_tool.set_correct($me,hp_id,note_tool.hp_ids[hp_id]);  
+			note_tool.set_correct(me,hp_id,note_tool.hp_ids[hp_id]);  
 			return true;
 		}
-		$('.refer[hp_id='  + hp_id +  ']').html('&nbsp;');
+		document.querySelectorAll(`.refer[hp_id="${hp_id}"]`).forEach(r => {
+		    r.innerHTML = '&nbsp;';
+		});
 		return false;
 	},
-	make_fillin:function($me)
+	make_fillin:function(me)
 	{
-			const hp_id =  $me.attr('hp_id');
-			const h = $me.html();
-			$me.attr('answer', h.trim());
-			var multiply = note_tool.tag_adjust($me);
-			if ($me.attr('answerlength') === undefined) {  
-				$me.css('width',((parseInt($me.width()) * multiply) + 5 ) +  "px");
-			} else {
-				multiply = $me.attr('answerlength');
-				$me.css('width',((10 * multiply) + 5 ) +  "px");
-			}
-			
-			$('*[hp_id='  + hp_id +  ']').css('width', $me.width());
-			if (!note_tool.handle_refer($me,hp_id)) {
-				$me.html('<input type="text" class="fillin_INPUT" hp_id="'  + hp_id + '" value="" />');
-			}
+		const hp_id =  me.getAttribute('hp_id');
+		const h = me.innerHTML;
+		const $me = $(me);
+
+		me.setAttribute('answer', h.trim());
+		let multiply = note_tool.tag_adjust(me);
+		const answerLength = me.getAttribute('answerlength') ?? undefined;
+		if (answerLength === undefined) {  
+			$me.css('width',((parseInt($me.width()) * multiply) + 5 ) +  "px");
+		} else {
+			multiply = answerLength;
+			$me.css('width',((10 * multiply) + 5 ) +  "px");
+		}
+		
+		$('*[hp_id='  + hp_id +  ']').css('width', $me.width());
+		if (!note_tool.handle_refer(me,hp_id)) {
+			me.innerHTML = '<input type="text" class="fillin_INPUT" hp_id="'  + hp_id + '" value="" />';
+		}
 
 	},
-	make_spoiler:function($me)
+	make_spoiler:function(me)
 	{
-		$me.css('width',$me.width());
-		$me.attr('content', $me.html().trim());
-		$me.html('&nbsp;');
-		$me.addClass('spoiler_hide');
-		$me.on('click', (e) => {
+		me.style.width = getComputedStyle(me).width;
+		me.setAttribute('content', me.innerHTML.trim());
+		me.innerHTML = '&nbsp;';
+		me.classList.add('spoiler_hide');
+		me.addEventListener('click', (e) => {
 			e.preventDefault(); 
-			const $t = $(e.currentTarget);
-			$t.removeClass('spoiler_hide'); 
-			$t.html($t.attr('content'));
+			t.classList.remove('spoiler_hide'); 
+			t.innerHTML = t.getAttribute('content');
 		});
 	},
-	make_select:function($me)
+	make_select:function(me)
 	{
-		$me.attr('answer', $me.html().trim());
-		const hp_id =  $me.attr('hp_id');
+		me.setAttribute('answer', me.innerHTML.trim());
+		const hp_id =  me.getAttribute('hp_id');
+		const $me = $(me);
 		
-		if (!note_tool.handle_refer($me,hp_id)) 
+		if (!note_tool.handle_refer(me,hp_id)) 
 		{
 			const options = ['<option value="...">...</option>'];
 			const values = $me.attr('answers').split(',');
@@ -182,7 +190,6 @@ const note_tool =
 				}
 			});
 			
-			
 		if (localStorage) {
 			if (localStorage.getItem('state') == 'test') {
 				this.hide();
@@ -191,46 +198,43 @@ const note_tool =
 				
 			}
 		}
-		$(".fillin").each((idx,f) => note_tool.make_fillin($(f)));
-		$('.spoiler').each((idx,s) => note_tool.make_spoiler($(s)));
-		$(".select").each((idx,s) => note_tool.make_select($(s)));
-		
+		document.querySelectorAll('.fillin').forEach((f) => note_tool.make_fillin(f));
+		document.querySelectorAll('.spoiler').forEach((s) => note_tool.make_spoiler(s));
+		document.querySelectorAll('.select').forEach((s) => note_tool.make_select(s));
 		
 		note_tool.hook();
-		
-		$(".note_AREA").attr('status','ready');
+		this.noteArea.setAttribute('status','ready');
 
 	  } catch(e) {
 		console.log(e);
 		alert("something went wrong loading this note. Please contact your instructor!");
 	  }
 	},
-	test_coded_answer(me) {
-		const $me = ($me);
-		var coded_answer = $me.parent().attr('codedanswer');
-		const hp_id =  $me.parent().attr('hp_id');
-		var pretty_answer = $me.val().toUpperCase().trim();
+	test_coded_answer($t,$tp) {
+		var coded_answer = $tp.attr('codedanswer');
+		const hp_id =  $tp.attr('hp_id');
+		var pretty_answer = $t.val().toUpperCase().trim();
 		console.log(pretty_answer + ' correct = ' + coded_answer +  ' ? given = ' + md5(pretty_answer)) ;
 		if (md5(pretty_answer) == coded_answer) {
-			note_tool.set_correct($me.parent(),hp_id,$me.val())
-		} else { $me.removeClass('correct');  }		
+			note_tool.set_correct($tp,hp_id,$t.val())
+		} else { $t.removeClass('correct');  }		
 	},
 	test_answer:function(e){
 		const $t = $(e.currentTarget);
-		const $p = $t.parent();
-		var coded_answer = $p.attr('codedanswer'); 
+		const $tp = $t.parent();
+
+		var coded_answer = $tp.attr('codedanswer'); 
 		if (coded_answer !== undefined)
 		{
 				console.log('uses coded answer test');
-				note_tool.test_coded_answer($t);
+				note_tool.test_coded_answer($t,$tp);
 				return true;
 		}
-
-		const answer = $p.attr('answer');
-		const hp_id =  $p.attr('hp_id');
+		const answer = $tp.attr('answer');
+		const hp_id =  $tp.attr('hp_id');
 
 		if ($t.val().toUpperCase().trim() == answer.toUpperCase()) {
-			note_tool.set_correct($p,hp_id,answer)
+			note_tool.set_correct($tp,hp_id,answer)
 		} else { $t.removeClass('correct');  }
 				
 		},

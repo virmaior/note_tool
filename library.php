@@ -80,7 +80,7 @@ class maker_page extends note_base_page
             echo   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
             
-            static::load_js(static::base_url() . 'notes.js');
+            static::load_js(static::base_url() . 'notes.js?rand=' . rand(1,1024) . '&');
             static::load_js(static::base_url() . 'maker/maker.js');
             static::load_js(static::base_url() . 'md5.js');
             
@@ -135,15 +135,12 @@ class maker_page extends note_base_page
 }
     
 
-
 class note_page extends note_base_page
 {
     private $my_db, $debug = false;
     public $mode = 'encoded'; // the mode here determines whether or not the fillin and select will be encoded.
     
-    
-    
-    function head($student_id): void
+    function head(?int $student_id = null): void
     {
         echo sprintf('<html><head><title>%1$s</title>',$this->note->title);
         static::load_css('notes.css');
@@ -154,7 +151,7 @@ class note_page extends note_base_page
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
         
         static::test($this->my_db,$student_id);
-        static::load_js('notes.js');
+        static::load_js(static::base_url() . 'notes.js?rand=' . rand(1,1024) . '&');
         static::load_js('md5.js');
         
         echo '</head>';
@@ -177,6 +174,7 @@ class note_page extends note_base_page
     
     function __construct(string $title, string $body, string $date)
     {
+        $this->note = new \stdClass();
         $this->note->title = $title;
         $this->note->body = $body;
         $this->note->date = $date;
